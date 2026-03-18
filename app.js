@@ -1,3 +1,69 @@
+const splashConfig = window.SPLASH_CONFIG || {};
+const splashWispConfig = splashConfig.wisp || {};
+const splashHeadConfig = splashConfig.head || {};
+const splashAllowInject = splashWispConfig.allowInject !== false;
+const splashDefaultWisp =
+  typeof splashWispConfig.default === "string" && splashWispConfig.default
+    ? splashWispConfig.default
+    : "wss://wisp.rhw.one/wisp/";
+
+function applyHeadConfig(config) {
+  if (!config || typeof config !== "object") return;
+  const head = document.head;
+  if (!head) return;
+  const title = typeof config.title === "string" ? config.title : "";
+  const favicon = typeof config.favicon === "string" ? config.favicon : "";
+  const meta = Array.isArray(config.meta) ? config.meta : [];
+  if (!title && !favicon && !meta.length) return;
+
+  if (title && title !== document.title) {
+    document.title = title;
+  }
+
+  if (favicon) {
+    const desiredHref = new URL(favicon, document.baseURI).href;
+    const iconLinks = Array.from(head.querySelectorAll('link[rel="icon"]'));
+    const existing = iconLinks[0] || null;
+    const existingHref = existing?.getAttribute("href")
+      ? new URL(existing.getAttribute("href"), document.baseURI).href
+      : "";
+    if (!existing) {
+      const link = document.createElement("link");
+      link.rel = "icon";
+      link.href = favicon;
+      head.appendChild(link);
+    } else if (existingHref !== desiredHref) {
+      existing.setAttribute("href", favicon);
+    }
+  }
+
+  if (!meta.length) return;
+  meta.forEach((entry) => {
+    const name = typeof entry?.name === "string" ? entry.name.trim() : "";
+    const property = typeof entry?.property === "string" ? entry.property.trim() : "";
+    const content = typeof entry?.content === "string" ? entry.content : "";
+    if (!content) return;
+    if (!name && !property) return;
+    const selector = name
+      ? `meta[name="${CSS.escape(name)}"]`
+      : `meta[property="${CSS.escape(property)}"]`;
+    const existing = head.querySelector(selector);
+    if (!existing) {
+      const metaEl = document.createElement("meta");
+      if (name) metaEl.setAttribute("name", name);
+      if (property) metaEl.setAttribute("property", property);
+      metaEl.setAttribute("content", content);
+      head.appendChild(metaEl);
+      return;
+    }
+    if (existing.getAttribute("content") !== content) {
+      existing.setAttribute("content", content);
+    }
+  });
+}
+
+applyHeadConfig(splashHeadConfig);
+
 const gamesCdnUrl = "https://cdn.jsdelivr.net/gh/rhenryw/SPLASHGames@main/games.json";
 const gamesStorage = {
   recents: "splash:games:recents",
@@ -1802,7 +1868,7 @@ async function init() {
     if (available) {
       await setWispUrl(localWisp);
     } else {
-      await setWispUrl("wss://wisp.rhw.one/");
+      await setWispUrl(splashDefaultWisp);
     }
   } else {
     await setWispUrl(wispUrl);
@@ -1837,7 +1903,7 @@ async function init() {
   });
   const token = window.location.hash.replace(/^#/, "");
   if (token) {
-    const injected = getInjectedTarget(token);
+    const injected = splashAllowInject ? getInjectedTarget(token) : null;
     if (injected !== null) {
       if (injected) {
         updateMode("mode-proxy");
@@ -1882,7 +1948,7 @@ window.addEventListener("hashchange", () => {
     updateMode("mode-terminal");
     return;
   }
-  const injected = getInjectedTarget(token);
+  const injected = splashAllowInject ? getInjectedTarget(token) : null;
   if (injected !== null) {
     if (injected) {
       updateMode("mode-proxy");
