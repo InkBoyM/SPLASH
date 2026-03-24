@@ -58,9 +58,9 @@ or:
 FAQ
 ---
 
-> Q: What is `splash.guard.js`? Why is it obfuscated?
+> Q: What are `splash.guard.js` and `ghost.js`? Why are they obfuscated?
 
-**A:** It is an on-demand obfuscation to prevent reading from certain filters, it is obfuscated as it cannot obfuscate itself and therefore could be detected without obfuscation. It is heavily based on [HTML-Guard](https://github.com/DosX-dev/HTML-Guard) by [DosX](https://github.com/DosX-dev)
+**A:** `splash.guard.js` is an on-demand obfuscation to prevent reading from certain filters, it is obfuscated as it cannot obfuscate itself and therefore could be detected without obfuscation. It is heavily based on [HTML-Guard](https://github.com/DosX-dev/HTML-Guard) by [DosX](https://github.com/DosX-dev). `ghost.js` is a custom anti-DeleDao system, and is obfuscator to, again, avoid detection and patching.
 
 > Q: How can I get to games? Are there any?
 
